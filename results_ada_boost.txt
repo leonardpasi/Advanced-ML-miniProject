@@ -140,3 +140,49 @@ Best: 0.608810 using {'learning_rate': 0.1, 'n_estimators': 200}
 
 Best: 0.646667 using {'learning_rate': 0.1, 'n_estimators': 300}
 0.646667 (0.014432) with: {'learning_rate': 0.1, 'n_estimators': 300}
+
+[CV 1/10] END learning_rate=0.05, n_estimators=400;, score=0.639 total time= 4.9min
+[CV 2/10] END learning_rate=0.05, n_estimators=400;, score=0.635 total time= 5.0min
+[CV 3/10] END learning_rate=0.05, n_estimators=400;, score=0.618 total time= 5.0min
+[CV 4/10] END learning_rate=0.05, n_estimators=400;, score=0.595 total time= 4.9min
+[CV 5/10] END learning_rate=0.05, n_estimators=400;, score=0.642 total time= 5.1min
+[CV 6/10] END learning_rate=0.05, n_estimators=400;, score=0.588 total time= 5.0min
+[CV 7/10] END learning_rate=0.05, n_estimators=400;, score=0.618 total time= 4.9min
+[CV 8/10] END learning_rate=0.05, n_estimators=400;, score=0.640 total time= 4.8min
+[CV 9/10] END learning_rate=0.05, n_estimators=400;, score=0.632 total time= 4.6min
+[CV 10/10] END learning_rate=0.05, n_estimators=400;, score=0.611 total time= 4.6min
+[CV 1/10] END learning_rate=0.05, n_estimators=500;, score=0.660 total time= 5.9min
+[CV 2/10] END learning_rate=0.05, n_estimators=500;, score=0.650 total time= 5.7min
+[CV 3/10] END learning_rate=0.05, n_estimators=500;, score=0.639 total time= 5.7min
+[CV 4/10] END learning_rate=0.05, n_estimators=500;, score=0.610 total time= 5.7min
+[CV 5/10] END learning_rate=0.05, n_estimators=500;, score=0.668 total time= 5.8min
+[CV 6/10] END learning_rate=0.05, n_estimators=500;, score=0.619 total time= 6.0min
+[CV 7/10] END learning_rate=0.05, n_estimators=500;, score=0.650 total time= 6.1min
+[CV 8/10] END learning_rate=0.05, n_estimators=500;, score=0.652 total time= 6.1min
+[CV 9/10] END learning_rate=0.05, n_estimators=500;, score=0.640 total time= 6.2min
+[CV 10/10] END learning_rate=0.05, n_estimators=500;, score=0.627 total time= 6.4min
+[CV 1/10] END learning_rate=0.1, n_estimators=400;, score=0.663 total time= 5.1min
+[CV 2/10] END learning_rate=0.1, n_estimators=400;, score=0.667 total time= 4.5min
+[CV 3/10] END learning_rate=0.1, n_estimators=400;, score=0.658 total time= 4.5min
+[CV 4/10] END learning_rate=0.1, n_estimators=400;, score=0.637 total time= 4.6min
+[CV 5/10] END learning_rate=0.1, n_estimators=400;, score=0.660 total time= 4.6min
+[CV 6/10] END learning_rate=0.1, n_estimators=400;, score=0.642 total time= 4.7min
+[CV 7/10] END learning_rate=0.1, n_estimators=400;, score=0.664 total time= 4.9min
+[CV 8/10] END learning_rate=0.1, n_estimators=400;, score=0.658 total time= 4.7min
+[CV 9/10] END learning_rate=0.1, n_estimators=400;, score=0.664 total time= 4.6min
+[CV 10/10] END learning_rate=0.1, n_estimators=400;, score=0.636 total time= 4.6min
+[CV 1/10] END learning_rate=0.1, n_estimators=500;, score=0.664 total time= 6.1min
+[CV 2/10] END learning_rate=0.1, n_estimators=500;, score=0.664 total time= 5.9min
+[CV 3/10] END learning_rate=0.1, n_estimators=500;, score=0.638 total time= 5.9min
+[CV 4/10] END learning_rate=0.1, n_estimators=500;, score=0.629 total time= 6.3min
+[CV 5/10] END learning_rate=0.1, n_estimators=500;, score=0.661 total time= 6.7min
+[CV 6/10] END learning_rate=0.1, n_estimators=500;, score=0.643 total time= 6.5min
+[CV 7/10] END learning_rate=0.1, n_estimators=500;, score=0.658 total time= 7.0min
+[CV 8/10] END learning_rate=0.1, n_estimators=500;, score=0.645 total time= 7.0min
+[CV 9/10] END learning_rate=0.1, n_estimators=500;, score=0.640 total time= 6.9min
+[CV 10/10] END learning_rate=0.1, n_estimators=500;, score=0.617 total time= 7.5min
+Best: 0.654881 using {'learning_rate': 0.1, 'n_estimators': 400}
+0.621786 (0.018203) with: {'learning_rate': 0.05, 'n_estimators': 400}
+0.641548 (0.017362) with: {'learning_rate': 0.05, 'n_estimators': 500}
+0.654881 (0.011375) with: {'learning_rate': 0.1, 'n_estimators': 400}
+0.645952 (0.015182) with: {'learning_rate': 0.1, 'n_estimators': 500}

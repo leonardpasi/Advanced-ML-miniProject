@@ -8,18 +8,17 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 from scipy import signal
-from scipy.fft import fft, fftfreq
+from scipy.fft import fft
 
 from sklearn.cross_decomposition import CCA
+from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 from sklearn.model_selection import train_test_split
 
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn import svm
 
-from sklearn.datasets import make_classification
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.model_selection import GridSearchCV
 
@@ -85,7 +84,7 @@ def Feature_extract(data, low_f=5, high_f=45, fs=250, filter_type="hamming", nta
 
 F, PSD, features, f = Feature_extract(data_chosen)
 
-#%% Creating training and testing data
+#%% Creating training and testing data (frequency domain)
 
 training_data = []
 
@@ -115,10 +114,28 @@ clf.fit(X_train, y_train)
 clf = AdaBoostClassifier(n_estimators=500, learning_rate=1)
 clf.fit(X_train, y_train)
 
-#%% Test and get accuracy
+#%% PCA (necessary before Gaussian Process Classifier)
 
-y_pred = clf.predict(X_train)
-print(accuracy_score(y_train,y_pred))
+pca = PCA(n_components=100)
+pca.fit(X_train)
+plt.plot(np.cumsum(pca.explained_variance_ratio_*100))
+plt.xlabel('Number of components')
+plt.ylabel('Explained variance (%)') # n_components = 100 explains for >90% of the variance
+
+X_red = pca.transform(X_train)
+
+
+#%% Gaussian Process Classifier
+
+clf = GaussianProcessClassifier()
+
+#clf.fit(X_red, y_train) # MF keeps crushing on me
+clf.fit(X_red, y_train>20) # Works fine with binary classification
+
+#%% Test and get accuracy (following PCA and GPC)
+
+y_pred = clf.predict(pca.transform(X_test))
+print(accuracy_score(y_test>20,y_pred))
 
 #%% Grid-search with Adaboost
 
@@ -148,3 +165,4 @@ params = grid_result.cv_results_['params']
 
 for mean, stdev, param in zip(means, stds, params):
     print("%f (%f) with: %r" % (mean, stdev, param))
+  
