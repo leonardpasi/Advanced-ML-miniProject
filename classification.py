@@ -166,3 +166,39 @@ params = grid_result.cv_results_['params']
 for mean, stdev, param in zip(means, stds, params):
     print("%f (%f) with: %r" % (mean, stdev, param))
   
+#%% Plot
+
+def visualize(nb_samples=2, labels=[1,40]):
+    """
+    Plot randomly selected samples from desired classes
+    
+    Parameters
+    ----------
+    nb_samples : int, optional
+        Number of randomly selected samples to plot, for each class.
+    labels : list of int, optional
+        List of classes to visualize. No more than 5 classes.
+
+    Returns
+    -------
+    None.
+    """
+    
+    fig, ax = plt.subplots()
+    fig.set_size_inches(10, 10)
+    colors = ['b', 'g', 'r', 'c', 'm']
+    
+    for i,c in zip(labels, colors):
+        X_i = Xavg[y==i]
+        random_indices = np.random.choice(X_i.shape[0], size=nb_samples, replace=False)
+        for j in random_indices:
+            ax.plot(f[:350], X_i[j, :350], color=c, alpha=0.5, label=i)
+            
+    ax.set_xlabel('Frequency [Hz]')
+    ax.set_ylabel('PSD')
+    ax.legend()
+    
+visualize() # Useful observation : beyond 50 Hz, there's nothing to see. Why not reduce the dimentionality?
+
+
+    
