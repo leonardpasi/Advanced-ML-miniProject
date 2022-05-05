@@ -18,6 +18,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn import svm
+from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -99,6 +100,7 @@ X = np.array([i[0] for i in training_data])
 y = np.array([i[1] for i in training_data])
 
 Xavg = np.mean(X, axis=1) # Average across channels
+Xavg = Xavg[:,45:200] # Nothing relevant outside 7.5-33 Hz
 
 X_train, X_test, y_train, y_test = train_test_split(Xavg,y,train_size=0.7,random_state=123)
 
@@ -139,12 +141,12 @@ print(accuracy_score(y_test>20,y_pred))
 
 #%% Grid-search with Adaboost
 
-model = AdaBoostClassifier()
+model = AdaBoostClassifier(DecisionTreeClassifier(max_depth=5))
 
 # define the grid of values to search
 grid = dict()
-grid['n_estimators'] = [400, 500]
-grid['learning_rate'] = [0.05, 0.1]
+grid['n_estimators'] = [300]
+grid['learning_rate'] = [0.005]
 
 # define the evaluation procedure
 cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=1, random_state=1)
@@ -192,7 +194,7 @@ def visualize(nb_samples=2, labels=[1,40]):
         X_i = Xavg[y==i]
         random_indices = np.random.choice(X_i.shape[0], size=nb_samples, replace=False)
         for j in random_indices:
-            ax.plot(f[:350], X_i[j, :350], color=c, alpha=0.5, label=i)
+            ax.plot(f[45:200], X_i[j], color=c, alpha=0.5, label=i)
             
     ax.set_xlabel('Frequency [Hz]')
     ax.set_ylabel('PSD')
