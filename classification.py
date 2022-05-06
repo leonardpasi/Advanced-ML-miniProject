@@ -99,28 +99,50 @@ grid['n_estimators'] = [300]
 grid['learning_rate'] = [0.1]
 
 # define the evaluation procedure
-cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=1, random_state=1)
+cv = RepeatedStratifiedKFold(n_splits=2, n_repeats=1, random_state=1)
 
 # define the grid search procedure
-grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=1, cv=cv, scoring='accuracy', verbose=3)
+grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=1, cv=cv, 
+                           scoring=['accuracy', 'f1_macro'], verbose=3, refit='accuracy',
+                           return_train_score=True)
 
 # execute the grid search
 grid_result = grid_search.fit(X, y)
 
-# summarize the best score and configuration
-print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+#%% Report Grid Search results
 
-# summarize all scores that were evaluated
-means = grid_result.cv_results_['mean_test_score']
-stds = grid_result.cv_results_['std_test_score']
+test_acc_means = grid_result.cv_results_['mean_test_accuracy']
+test_acc_stds = grid_result.cv_results_['std_test_accuracy']
+train_acc_means = grid_result.cv_results_['mean_train_accuracy']
+train_acc_stds = grid_result.cv_results_['std_train_accuracy']
+
+test_f1_means = grid_result.cv_results_['mean_test_f1_macro']
+test_f1_stds = grid_result.cv_results_['std_test_f1_macro']
+train_f1_means = grid_result.cv_results_['mean_train_f1_macro']
+train_f1_stds = grid_result.cv_results_['std_train_f1_macro']
+
 params = grid_result.cv_results_['params']
 
-for mean, stdev, param in zip(means, stds, params):
-    print("%f (%f) with: %r" % (mean, stdev, param))
+
+print("\n \nBest accuracy: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+print("Best F1 score: %f using %s" % (test_f1_means.max(), params[test_f1_means.argmax()]))
+
+for i in range(len(params)):
+    
+    print("\nWith %r" % params[i])
+    print("Accuracy -- Test : %f (%f) -- Train : %f (%f)" % (test_acc_means[i],
+                                                             test_acc_stds[i],
+                                                             train_acc_means[i],
+                                                             train_acc_stds[i]))
+    print("F1-score -- Test : %f (%f) -- Train : %f (%f)" % (test_f1_means[i],
+                                                             test_f1_stds[i],
+                                                             train_f1_means[i],
+                                                             train_f1_stds[i]))
+                                                                     
   
 #%% Plot
 
-def visualize_random(nb_samples=1, labels=[1,2]):
+def visualize_random(nb_samples=1, labels=[1,3]):
     """
     Plot randomly selected samples from desired classes
     
@@ -152,7 +174,32 @@ def visualize_random(nb_samples=1, labels=[1,2]):
     ax.set_ylabel('PSD')
     ax.legend()
     
-visualize_random() # Useful observation : beyond 50 Hz, there's nothing to see. Why not reduce the dimentionality?
+def visualize_mean(save_fig=False):
+    """
+    Cool function to visualize mean PSD for each flicker frequency :)
+    """
+    
+    fig, axs = plt.subplots(4,2)
+    fig.set_size_inches(10, 10)
+    fig.suptitle("Mean Power Spectral Density for each flicker frequency")
+    fig.text(0.5, 0.06, 'Hz', ha='center', va='center')
+    fig.text(0.06, 0.5, 'Power Spectral Density', ha='center', va='center', rotation='vertical')
+    
+    for i, ax in zip(np.unique(y), axs.flatten(order='F')):
+        psd_mean = X[y==i].mean(axis=0);
+        psd_std = X[y==i].std(axis=0)
+        ax.plot(f[(f>=f_low) & (f<=f_high)], psd_mean)
+        ax.fill_between(f[(f>=f_low) & (f<=f_high)], psd_mean-psd_std, psd_mean+psd_std, alpha=0.3, label='+/- $\sigma$')
+        ax.axvline(x=f_target[i-1],linewidth=1, linestyle='dashed', label="{}Hz".format(f_target[i-1]))
+        ax.axvline(x=f_target[i-1]*2, linewidth=1, linestyle='dotted', label="{}Hz".format(2*f_target[i-1]))
+        ax.set_ylim([-2,16])
+        ax.legend()
+    
+    if save_fig :
+        plt.savefig("Mean_PSDs.svg")
+    
+# visualize_random()
+visualize_mean()
 
 
     
