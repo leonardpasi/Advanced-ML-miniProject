@@ -52,10 +52,35 @@ training_data = np.array(training_data,dtype=object)
 X = np.array([i[0] for i in training_data]) 
 y = np.array([i[1] for i in training_data])
 
-f_low, f_high = 7.5, 31 # frequency range of interest
-X = X[:,(f>=f_low) & (f<=f_high)] # reduce dimentionality of samples: from 751 to 142
+#%% Reduce dimentionality
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+ultra_reduce = True
+f_low, f_high = 7.5, 31 # frequency range of interest
+eps = 1e-6
+
+if ultra_reduce:
+    mask = np.zeros(f.shape, dtype=bool)
+    for f_i in np.concatenate((np.asarray(f_target), np.asarray(f_target)*2)):
+        idx = (np.abs(f - f_i)).argmin()
+        mask[idx]=True
+        
+        # The following is meant for the 40 classes case, where many target flicker
+        # frequencies are not exactly represented in the PSD. In that case we keep
+        # the two closest frequencies. Another option is to change the resolution
+        # of the periodogram, such that flicker frequencies are exactly represented
+        # e.g. set "nfft = 1250" in the periodogram computation
+        if f[idx] < f_i-eps:
+            mask[idx+1]=True
+        elif f[idx] > f_i+eps:
+            mask[idx-1]=True
+        
+    X_red = X[:,mask] # dimensionality reduction: from 751 to 16 !
+        
+else:
+    X_red = X[:,(f>=f_low) & (f<=f_high)] # dimensionality reduction: from 751 to 142
+
+
+X_train, X_test, y_train, y_test = train_test_split(X_red, y, test_size=0.33, random_state=42)
 
 
 
@@ -107,7 +132,7 @@ grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=1, cv=cv,
                            return_train_score=True)
 
 # execute the grid search
-grid_result = grid_search.fit(X, y)
+grid_result = grid_search.fit(X_red, y)
 
 #%% Report Grid Search results
 
@@ -164,6 +189,7 @@ def visualize_random(nb_samples=1, labels=[1,3]):
     
     for i,c in zip(labels, colors):
         X_i = X[y==i]
+        X_i = X_i[:, (f>=f_low) & (f<=f_high)]
         random_indices = np.random.choice(X_i.shape[0], size=nb_samples, replace=False)
         ax.axvline(x=f_target[i-1], color=c, linewidth=1, linestyle='dashed', label="{}Hz".format(f_target[i-1]))
         ax.axvline(x=f_target[i-1]*2, color=c, linewidth=1, linestyle='dotted', label="{}Hz".format(2*f_target[i-1]))
@@ -186,8 +212,9 @@ def visualize_mean(save_fig=False):
     fig.text(0.06, 0.5, 'Power Spectral Density', ha='center', va='center', rotation='vertical')
     
     for i, ax in zip(np.unique(y), axs.flatten(order='F')):
-        psd_mean = X[y==i].mean(axis=0);
-        psd_std = X[y==i].std(axis=0)
+        X_i = X[y==i]
+        psd_mean = X_i[:, (f>=f_low) & (f<=f_high)].mean(axis=0);
+        psd_std = X_i[:, (f>=f_low) & (f<=f_high)].std(axis=0)
         ax.plot(f[(f>=f_low) & (f<=f_high)], psd_mean)
         ax.fill_between(f[(f>=f_low) & (f<=f_high)], psd_mean-psd_std, psd_mean+psd_std, alpha=0.3, label='+/- $\sigma$')
         ax.axvline(x=f_target[i-1],linewidth=1, linestyle='dashed', label="{}Hz".format(f_target[i-1]))
@@ -198,8 +225,8 @@ def visualize_mean(save_fig=False):
     if save_fig :
         plt.savefig("Mean_PSDs.svg")
     
-# visualize_random()
-visualize_mean()
+visualize_random()
+#visualize_mean()
 
 
     
