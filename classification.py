@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 from scipy import signal
+import joblib
 
 from sklearn.cross_decomposition import CCA
 from sklearn.decomposition import PCA
@@ -52,7 +53,7 @@ training_data = np.array(training_data,dtype=object)
 X = np.array([i[0] for i in training_data]) 
 y = np.array([i[1] for i in training_data])
 
-#%% Reduce dimentionality
+#%% Dimensionality reduction + quick test with SVM
 
 ultra_reduce = True
 f_low, f_high = 7.5, 31 # frequency range of interest
@@ -79,12 +80,9 @@ if ultra_reduce:
 else:
     X_red = X[:,(f>=f_low) & (f<=f_high)] # dimensionality reduction: from 751 to 142
 
+# Baseline: SVM
 
 X_train, X_test, y_train, y_test = train_test_split(X_red, y, test_size=0.33, random_state=42)
-
-
-
-#%% Baseline: SVM classifier 82% accuracy
 
 clf = svm.SVC()
 clf.fit(X_train, y_train)
@@ -92,39 +90,53 @@ clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 print(accuracy_score(y_test,y_pred))
 
+#%% PCA: classic approach to reduce dimensionality. Doesn't work at all here (wtf?)
 
-#%% PCA: further reducing the dimentionality does not seem necessary. But nice to see
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-pca = PCA(n_components=100)
+pca = PCA(n_components=10)
 pca.fit(X_train)
 plt.plot(np.cumsum(pca.explained_variance_ratio_*100))
 plt.xlabel('Number of components')
-plt.ylabel('Explained variance (%)') # n_components = 100 explains for >90% of the variance
-
-#X_red = pca.transform(X_train)
+plt.ylabel('Explained variance (%)')
 
 
-#%% Gaussian Process Classifier
+clf = svm.SVC()
+clf.fit(pca.transform(X_train), y_train)
 
-kernel = 1.0*kernels.RBF(5.0) # 86% accuracy. Amazing improvement wrt default kernel
+y_pred = clf.predict(pca.transform(X_test))
+print(accuracy_score(y_test,y_pred))
+
+
+#%% Gaussian Process Classifier: 88.8% accuracy on dataset reduced to 16 dimensions
+
+kernel = 1.0*kernels.RBF(5.0) #  Amazing improvement wrt default kernel
 clf = GaussianProcessClassifier(kernel)
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
 print(accuracy_score(y_test,y_pred))
 
+#%% Quick tests to have a feeling hyperparameters ranges to explore in Grid Search
 
-#%% Grid-search with Adaboost
+model = AdaBoostClassifier(n_estimators = 10000, learning_rate=0.001)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+print(accuracy_score(y_test,y_pred))
+
+#%% Grid-search with Adaboost. WARNING: this can take a while. It was executed once, and results were saved
+
 
 model = AdaBoostClassifier()
 
 # define the grid of values to search
 grid = dict()
-grid['n_estimators'] = [300]
-grid['learning_rate'] = [0.1]
+grid['n_estimators'] = [50, 100, 200, 400, 800, 1600, 3200, 6400]
+grid['learning_rate'] = [1.0, 0.1, 0.01, 0.001]
 
 # define the evaluation procedure
-cv = RepeatedStratifiedKFold(n_splits=2, n_repeats=1, random_state=1)
+cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
 
 # define the grid search procedure
 grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=1, cv=cv, 
@@ -135,6 +147,10 @@ grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=1, cv=cv,
 grid_result = grid_search.fit(X_red, y)
 
 #%% Report Grid Search results
+
+# Load results
+grid_result = joblib.load('./Grid_Search_Decision_Stumps/grid_result_decision_stump.pkl')
+grid = joblib.load('./Grid_Search_Decision_Stumps/grid_decision_stump.pkl')
 
 test_acc_means = grid_result.cv_results_['mean_test_accuracy']
 test_acc_stds = grid_result.cv_results_['std_test_accuracy']
@@ -163,8 +179,45 @@ for i in range(len(params)):
                                                              test_f1_stds[i],
                                                              train_f1_means[i],
                                                              train_f1_stds[i]))
-                                                                     
-  
+#%% HEAT MAP
+
+n1 = len(grid['learning_rate'])
+n2 = len(grid['n_estimators'])
+fig, (ax1, ax2) = plt.subplots(2,1)
+fig.set_size_inches(8, 8)
+fig.suptitle("Grid Search: Real Adaboost with decision stumps", size='x-large')
+
+# TEST ACCURACY
+
+acc = (test_acc_means*100).reshape((n1,n2)).round(decimals=1).astype(str)
+std = (test_acc_stds*100).reshape((n1,n2)).round(decimals=1).astype(str)
+annot = np.char.add(acc, "\n$\pm$")
+annot = np.char.add(annot, std)
+annot = annot.astype(object)
+
+sns.heatmap(test_acc_means.reshape((n1,n2))*100, annot=annot, xticklabels=grid['n_estimators'],
+            yticklabels=grid['learning_rate'], fmt='', ax=ax1, vmin=35, vmax=93, cbar=False)
+ax1.set_title('Test accuracy: mean $\pm$ standard deviation')
+ax1.set_ylabel('Learning rate')
+
+
+# TRAIN ACCURACY
+
+acc = (train_acc_means*100).reshape((n1,n2)).round(decimals=1).astype(str)
+std = (train_acc_stds*100).reshape((n1,n2)).round(decimals=1).astype(str)
+annot = np.char.add(acc, "\n$\pm$")
+annot = np.char.add(annot, std)
+annot = annot.astype(object)
+
+sns.heatmap(train_acc_means.reshape((n1,n2))*100, annot=annot, xticklabels=grid['n_estimators'],
+            yticklabels=grid['learning_rate'], fmt='', ax=ax2, vmin=35, vmax=93, cbar=False)
+ax2.set_title('Train accuracy: mean $\pm$ standard deviation')
+ax2.set_xlabel('Number of estimators')
+ax2.set_ylabel('Learning rate')
+
+# plt.savefig("Heat_Map_decision_stump.svg")
+                                                                
+
 #%% Plot
 
 def visualize_random(nb_samples=1, labels=[1,3]):
@@ -225,8 +278,8 @@ def visualize_mean(save_fig=False):
     if save_fig :
         plt.savefig("Mean_PSDs.svg")
     
-visualize_random()
-#visualize_mean()
+#visualize_random()
+visualize_mean()
 
 
     
