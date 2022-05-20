@@ -13,15 +13,13 @@ import joblib
 from sklearn.cross_decomposition import CCA
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
-from sklearn.model_selection import train_test_split
 
 from sklearn.gaussian_process import GaussianProcessClassifier, kernels
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
 
-from sklearn.model_selection import RepeatedStratifiedKFold
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RepeatedStratifiedKFold, GridSearchCV, train_test_split
 
 
 #%% Load data, extract features (compute PSD), prepare X and y
@@ -162,6 +160,11 @@ test_f1_stds = grid_result.cv_results_['std_test_f1_macro']
 train_f1_means = grid_result.cv_results_['mean_train_f1_macro']
 train_f1_stds = grid_result.cv_results_['std_train_f1_macro']
 
+test_time_means = grid_result.cv_results_['mean_score_time']
+test_time_stds = grid_result.cv_results_['std_score_time']
+train_time_means = grid_result.cv_results_['mean_fit_time']
+train_time_stds = grid_result.cv_results_['std_fit_time']
+
 params = grid_result.cv_results_['params']
 
 
@@ -179,7 +182,7 @@ for i in range(len(params)):
                                                              test_f1_stds[i],
                                                              train_f1_means[i],
                                                              train_f1_stds[i]))
-#%% HEAT MAP
+#%% HEAT MAPS
 
 n1 = len(grid['learning_rate'])
 n2 = len(grid['n_estimators'])
@@ -216,7 +219,69 @@ ax2.set_xlabel('Number of estimators')
 ax2.set_ylabel('Learning rate')
 
 # plt.savefig("Heat_Map_decision_stump.svg")
-                                                                
+
+#%% Time complexity
+
+fig, (ax1, ax2) = plt.subplots(2,1)
+fig.set_size_inches(7, 8)
+fig.suptitle("Real Adaboost: time complexity as a function of hyperparameters", size='x-large')
+
+ax1.set_title('Training')
+ax2.set_title('Testing')
+ax2.set_xlabel('Number of estimators')
+ax1.set_ylabel('Time [s]')
+ax2.set_ylabel('Time [s]')
+#ax1.set_xscale('log')
+
+for i in range(n1):
+    ax1.errorbar(grid['n_estimators'], train_time_means.reshape((n1,n2))[i,:], 
+             label=grid['learning_rate'][i], yerr=train_time_stds.reshape((n1,n2))[i,:],
+             marker='o', markersize=4)
+    
+    ax2.errorbar(grid['n_estimators'], test_time_means.reshape((n1,n2))[i,:], 
+             label=grid['learning_rate'][i], yerr=test_time_stds.reshape((n1,n2))[i,:],
+             marker='o', markersize=4)
+    
+ax1.legend(title='Learning rate')
+ax2.legend(title='Learning rate')
+
+#plt.savefig("ada_stumps_time_complexity_hyp.svg")
+
+#%% Confusion Matrix for the selected model
+
+model = AdaBoostClassifier(n_estimators = 200, learning_rate=0.1)
+conf_matrices = []
+kf = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+
+for train_index, test_index in kf.split(X_red, y):
+
+   X_train, X_test = X_red[train_index], X_red[test_index]
+   y_train, y_test = y[train_index], y[test_index]
+
+   model.fit(X_train, y_train)
+   conf_matrix = confusion_matrix(y_test, model.predict(X_test), normalize='true')
+   conf_matrices.append(conf_matrix)
+   
+mean_conf_matrix = np.mean(conf_matrices, axis=0)
+std_conf_matrix = np.std(conf_matrices, axis=0)
+
+#%%
+foo = mean_conf_matrix.round(decimals=2).astype(str)
+bar = std_conf_matrix.round(decimals=2).astype(str)
+annot = np.char.add(foo, "\n$\pm$")
+annot = np.char.add(annot, bar)
+annot = annot.astype(object)
+
+fig, ax = plt.subplots() 
+fig.set_size_inches(6, 6)  
+sns.heatmap(mean_conf_matrix, annot=annot, fmt='', cbar=False, ax=ax)
+        
+ax.set_xlabel('Predicted class')
+ax.set_ylabel('True class')
+fig.suptitle('Confusion Matrix for Adaboost Classifier with decision \nstumps \
+(n_estimators = 200, learning_rate=0.1)')
+
+#plt.savefig("Conf_Matrix_AdaBoost_stump.svg")                                
 
 #%% Plot
 
