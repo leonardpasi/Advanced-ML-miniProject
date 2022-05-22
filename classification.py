@@ -10,9 +10,8 @@ import seaborn as sns
 from scipy import signal
 import joblib
 
-from sklearn.cross_decomposition import CCA
 from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score
 
 from sklearn.gaussian_process import GaussianProcessClassifier, kernels
 from sklearn.ensemble import AdaBoostClassifier
@@ -117,7 +116,8 @@ print(accuracy_score(y_test,y_pred))
 
 #%% Quick tests to have a feeling hyperparameters ranges to explore in Grid Search
 
-model = AdaBoostClassifier(n_estimators = 10000, learning_rate=0.001)
+base_estimator = DecisionTreeClassifier(max_depth=5, splitter="best")
+model = AdaBoostClassifier(n_estimators = 1600, learning_rate=1.0, base_estimator=base_estimator)
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
@@ -125,12 +125,12 @@ print(accuracy_score(y_test,y_pred))
 
 #%% Grid-search with Adaboost. WARNING: this can take a while. It was executed once, and results were saved
 
-
-model = AdaBoostClassifier()
+base_estimator = DecisionTreeClassifier(max_depth=5)
+model = AdaBoostClassifier(base_estimator=base_estimator)
 
 # define the grid of values to search
 grid = dict()
-grid['n_estimators'] = [50, 100, 200, 400, 800, 1600, 3200, 6400]
+grid['n_estimators'] = [50, 100, 200, 400, 800, 1600]
 grid['learning_rate'] = [1.0, 0.1, 0.01, 0.001]
 
 # define the evaluation procedure
@@ -147,8 +147,8 @@ grid_result = grid_search.fit(X_red, y)
 #%% Report Grid Search results
 
 # Load results
-grid_result = joblib.load('./Grid_Search_Decision_Stumps/grid_result_decision_stump.pkl')
-grid = joblib.load('./Grid_Search_Decision_Stumps/grid_decision_stump.pkl')
+#grid_result = joblib.load('./Grid_Search_Decision_Stumps/grid_result_decision_stump.pkl')
+#grid = joblib.load('./Grid_Search_Decision_Stumps/grid_decision_stump.pkl')
 
 test_acc_means = grid_result.cv_results_['mean_test_accuracy']
 test_acc_stds = grid_result.cv_results_['std_test_accuracy']
@@ -188,7 +188,7 @@ n1 = len(grid['learning_rate'])
 n2 = len(grid['n_estimators'])
 fig, (ax1, ax2) = plt.subplots(2,1)
 fig.set_size_inches(8, 8)
-fig.suptitle("Grid Search: Real Adaboost with decision stumps", size='x-large')
+fig.suptitle("Grid Search: Real Adaboost with decision trees (depth = 5)", size='x-large')
 
 # TEST ACCURACY
 
@@ -218,7 +218,7 @@ ax2.set_title('Train accuracy: mean $\pm$ standard deviation')
 ax2.set_xlabel('Number of estimators')
 ax2.set_ylabel('Learning rate')
 
-# plt.savefig("Heat_Map_decision_stump.svg")
+plt.savefig("Heat_Map_decision_trees_5.svg")
 
 #%% Time complexity
 
@@ -245,11 +245,11 @@ for i in range(n1):
 ax1.legend(title='Learning rate')
 ax2.legend(title='Learning rate')
 
-#plt.savefig("ada_stumps_time_complexity_hyp.svg")
+plt.savefig("ada_trees5_time_complexity_hyp.svg")
 
 #%% Confusion Matrix for the selected model
 
-model = AdaBoostClassifier(n_estimators = 200, learning_rate=0.1)
+model = AdaBoostClassifier(n_estimators = 400, learning_rate=1.0, base_estimator=base_estimator)
 conf_matrices = []
 kf = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
 
@@ -278,10 +278,10 @@ sns.heatmap(mean_conf_matrix, annot=annot, fmt='', cbar=False, ax=ax)
         
 ax.set_xlabel('Predicted class')
 ax.set_ylabel('True class')
-fig.suptitle('Confusion Matrix for Adaboost Classifier with decision \nstumps \
-(n_estimators = 200, learning_rate=0.1)')
+fig.suptitle('Confusion Matrix for Adaboost Classifier with 5-stage\ndecision trees \
+(n_estimators = 400, learning_rate=1.0)')
 
-#plt.savefig("Conf_Matrix_AdaBoost_stump.svg")                                
+plt.savefig("Conf_Matrix_AdaBoost_trees5.svg")                                
 
 #%% Plot
 
