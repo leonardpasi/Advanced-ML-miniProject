@@ -20,6 +20,12 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.model_selection import RepeatedStratifiedKFold, GridSearchCV, train_test_split
 
+# Font settings
+font = {'family' : 'Georgia',
+       'weight'  : 'normal',
+       'size'    :  11}
+plt.rc('font',**font)
+
 
 #%% Load data, extract features (compute PSD), prepare X and y
 
@@ -324,10 +330,9 @@ def visualize_mean(save_fig=False):
     """
     
     fig, axs = plt.subplots(4,2)
-    fig.set_size_inches(10, 10)
-    fig.suptitle("Mean Power Spectral Density for each flicker frequency")
-    fig.text(0.5, 0.06, 'Hz', ha='center', va='center')
-    fig.text(0.06, 0.5, 'Power Spectral Density', ha='center', va='center', rotation='vertical')
+    fig.set_size_inches(8, 8)
+    #fig.suptitle("Mean Power Spectral Density for each flicker frequency")
+    fig.text(0.00, 0.5, 'Power Spectral Density', ha='center', va='center', rotation='vertical')
     
     for i, ax in zip(np.unique(y), axs.flatten(order='F')):
         X_i = X[y==i]
@@ -335,13 +340,22 @@ def visualize_mean(save_fig=False):
         psd_std = X_i[:, (f>=f_low) & (f<=f_high)].std(axis=0)
         ax.plot(f[(f>=f_low) & (f<=f_high)], psd_mean)
         ax.fill_between(f[(f>=f_low) & (f<=f_high)], psd_mean-psd_std, psd_mean+psd_std, alpha=0.3, label='+/- $\sigma$')
-        ax.axvline(x=f_target[i-1],linewidth=1, linestyle='dashed', label="{}Hz".format(f_target[i-1]))
-        ax.axvline(x=f_target[i-1]*2, linewidth=1, linestyle='dotted', label="{}Hz".format(2*f_target[i-1]))
+        ax.axvline(x=f_target[i-1],linewidth=1, linestyle='dashed', label="{} Hz".format(f_target[i-1]))
+        ax.axvline(x=f_target[i-1]*2, linewidth=1, linestyle='dotted', label="{} Hz".format(2*f_target[i-1]))
         ax.set_ylim([-2,16])
+        ax.tick_params(labelbottom=False)
         ax.legend()
     
+    for ax in axs[:,1]:
+        ax.tick_params(labelleft=False)
+        
+    for ax in axs[-1,:]:
+        ax.tick_params(labelbottom=True)
+        ax.set_xlabel('Hz')
+         
+    plt.tight_layout()
     if save_fig :
-        plt.savefig("Mean_PSDs.svg")
+        plt.savefig("Mean_PSDs.svg", bbox_inches='tight')
     
 #visualize_random()
 visualize_mean()
