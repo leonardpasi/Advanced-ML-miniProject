@@ -4,8 +4,8 @@
 
 - **`documents/`**: Contains our final report for the project, and the paper that introduced the SSVEP dataset.
 - **`src/`**: Contains the main source code of the project. As the only deliverable for this project was the report, the code is organized in python scripts with code cells (to be executed with environments that support cell-based execution, such as VS Code and Spyder). The focus here was not to write clean and maintainable code, but to quickly get results.
-- **`data/`**: The `selected_channels.npy` that is used to run the code is not included in this repo, as it weighs 865 MB - added to `.gitignore`.
 - **`plots/`**: Contains all the plots that were generated and eventually included in the final report.
+- `.gitignore`: lists the `selected_channels.npy` file, which is the dataset we used to run the code - as it weighs too much.
 
 ## Overview
 
