@@ -11,7 +11,6 @@
 
 The goal of this project is to thoroughly compare two classifiers: the Gaussian Process classifier (GPC) and AdaBoost.
 We do so using a steady state visually evoked potentials (SSVEP) dataset.
-The project was realized as part of the Advanced Machine Learning course at EPFL, by prof. Aude Billard.
 
 ### The classifiers
 
@@ -24,6 +23,7 @@ The **Gaussian Process Classifier** (GPC) is a non-parametric supervised machine
 SSVEPs are neural signals that are natural responses to visual stimulation at specific frequencies. When the retina is excited by a visual stimulus ranging from 3.5 Hz to 75 Hz, the brain generates electrical activity at the same (or multiples of) frequency of the visual stimulus. In 2017, Wang et al. presented a benchmark SSVEP dataset acquired with a 40- target Brain-Computer Interface (BCI) speller. The dataset consists of 64-channel Electroencephalogram (EEG) data from 35 healthy subjects while they performed a cue-guided target selecting task. There are 40 stimulation frequencies ranging from 8 Hz to 15.8 Hz with an interval of 0.2 Hz. The stimulation duration in each trial was five seconds.
 
 ## Final grade: 5.75/6
+(Advanced Machine Learning course by prof. Aude Billard, EPFL)
 
 ## Plot example
 Results of the grid search that we performed on the number of estimators and learning rate for the Real AdaBoost Algorithm, where each estimator is a 1-level decision tree.
