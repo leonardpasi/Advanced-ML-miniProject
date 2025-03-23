@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 16 08:46:00 2022
-
-@author: jonasvishart
+Code to generate the time-complexity plots on mock datasets.
 """
 
 #%% Computational plots
