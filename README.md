@@ -11,6 +11,7 @@
 
 The goal of this project is to thoroughly compare two classifiers: the Gaussian Process classifier (GPC) and AdaBoost.
 We do so using a steady state visually evoked potentials (SSVEP) dataset.
+The project was realized as part of the Advanced Machine Learning course at EPFL, by prof. Aude Billard.
 
 ### The classifiers
 
