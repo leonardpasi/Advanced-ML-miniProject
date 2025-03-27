@@ -1,4 +1,4 @@
-# Advanced-ML-miniProject
+# SSVEP-classification
 
 ## Overview
 
